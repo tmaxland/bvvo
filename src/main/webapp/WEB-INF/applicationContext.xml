@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:tx="http://www.springframework.org/schema/tx"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:security="http://www.springframework.org/schema/security"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/tx
+        http://www.springframework.org/schema/tx/spring-tx.xsd
+        http://www.springframework.org/schema/security
+        http://www.springframework.org/schema/security/spring-security.xsd">
+
+
+    <bean id="dataSource" class="org.apache.tomcat.jdbc.pool.DataSource" destroy-method="close">
+        <property name="driverClassName" value="org.postgresql.Driver" />
+        <property name="url" value="jdbc:postgresql://localhost:5432/bvvo" />
+        <property name="username" value="postgres" />
+        <property name="password" value="abcd" />
+        <property name="initialSize" value="1" />
+    </bean>
+
+    <bean id="entityManagerFactory" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+        <property name="persistenceUnitName" value="bvvo" />
+        <property name="dataSource" ref="dataSource" />
+    </bean>
+
+    <bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+        <property name="entityManagerFactory" ref="entityManagerFactory" />
+    </bean>
+       
+    <bean class="org.springframework.dao.annotation.PersistenceExceptionTranslationPostProcessor" />
+	
+        	<bean class="org.springframework.http.converter.ByteArrayHttpMessageConverter">
+            <property name="supportedMediaTypes">
+            	    <list>
+                    <value>image/jpeg</value>
+                    <value>image/png</value>
+                </list>
+            </property>
+     	   </bean>
+
+
+		<bean id="mailSender" class="org.springframework.mail.javamail.JavaMailSenderImpl">
+        
+	<property name="protocol" value="smtps" />
+	<property name="host" value="smtp.gmail.com" />
+        <property name="port" value="465"/>
+        <property name="username" value="talisunep@gmail.com" />
+        <property name="password" value="dna7dna2@" />
+	<property name="javaMailProperties">
+		<props>
+			<prop key="mail.smtps.auth">true</prop>
+			<prop key="mail.smtps.starttls.enable">true</prop>
+			<prop key="mail.smtps.debug">true</prop>
+		</props>
+	</property>
+    </bean>
+    
+    <context:annotation-config />
+
+    <tx:annotation-driven />
+
+    <context:component-scan base-package="bvvo.model" />
+    
+	  <security:authentication-manager>
+        <security:authentication-provider>
+            <security:jdbc-user-service data-source-ref="dataSource"
+            	 authorities-by-username-query="select username,user_type from users where username=?"
+            	 />
+            
+        </security:authentication-provider>
+    </security:authentication-manager>
+
+
+    <security:http auto-config="true" use-expressions="true">
+        <security:intercept-url pattern="/user/addReview.html" access="hasRole('ROLE_USER')" />
+        <security:intercept-url pattern="/user/editReview.html" access="hasRole('ROLE_USER')" />
+        
+        
+    </security:http>
+
+    <security:global-method-security pre-post-annotations="enabled" />
+
+    
+</beans>
